@@ -1,0 +1,27 @@
+def main():
+    ids = []
+    lista_nombres_servicio = []
+    cantidades = []
+    valores_unitarios = []
+    
+    cantidad_ordenes = int(input("Digite la cantidad de órdenes: "))
+    
+    for i in range(cantidad_ordenes):
+        print(f"Orden {i+1}: ")
+        id_orden = input("Digite el ID de la orden: ")
+        nombre_servicio = input("Digite el nombre del servicio: ")
+        cantidad = float(input("Digite la cantidad: "))
+        valor = float(input("Digite el valor unitario: "))
+        
+        ids.append(id_orden)
+        lista_nombres_servicio.append(nombre_servicio)
+        cantidades.append(cantidad)
+        valores_unitarios.append(valor)
+        
+        total_factura = sum(cantidades[j] * valores_unitarios[j] for j in range(cantidad_ordenes))
+        
+        print(f"El valor total de la Orden es: {total_factura}")
+
+if __name__ == "__main__":
+    main()
+

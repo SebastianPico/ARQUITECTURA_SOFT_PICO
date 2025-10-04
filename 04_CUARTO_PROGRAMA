@@ -1,0 +1,106 @@
+from decimal import Decimal
+
+class OrdenFija:
+    def __init__(self, id_orden: str, nombre_servicio: str, valor_fijo: Decimal):
+        self.id_orden = id_orden
+        self.nombre_servicio = nombre_servicio
+        self.valor_fijo = Decimal(valor_fijo)
+
+    def calcular_total(self) -> Decimal:
+        return self.valor_fijo
+        
+
+class OrdenPorCantidad:
+    def __init__(self, id_orden: str, nombre_servicio: str, cantidad: Decimal, valor_unitario: Decimal):
+        self.id_orden = id_orden
+        self.nombre_servicio = nombre_servicio
+        self.cantidad = Decimal(cantidad)
+        self.valor_unitario = Decimal(valor_unitario)
+
+    def calcular_total(self) -> Decimal:
+        return self.cantidad * self.valor_unitario
+        
+
+class OrdenConDescuento:
+    def __init__(self, id_orden: str, nombre_servicio: str, valor_base: Decimal, porcentaje: Decimal, subtotal: Decimal):
+        self.id_orden = id_orden
+        self.nombre_servicio = nombre_servicio
+        self.valor_base = Decimal(valor_base)
+        # Normalizar porcentaje: si ponen 10 → 0.10
+        self.porcentaje = Decimal(porcentaje) / 100 if porcentaje > 1 else Decimal(porcentaje)
+        self.subtotal = Decimal(subtotal)
+
+    def calcular_total(self) -> Decimal:
+        return self.valor_base + (self.porcentaje * self.subtotal)
+        
+
+class Factura:
+    numero = None  
+
+    def __init__(self, numero: str, cliente: str, direccion: str):
+        Factura.numero = numero
+        self.cliente = cliente
+        self.direccion = direccion
+        self.ordenes_fijas = [None] * 50
+        self.ordenes_por_cantidad = [None] * 50
+        self.ordenes_con_descuento = [None] * 50
+        self.num_fijas = 0
+        self.num_cantidades = 0
+        self.num_descuentos = 0
+
+    def adicionar_orden_fija(self, id_orden, nombre_servicio, valor_fijo):
+        self.ordenes_fijas[self.num_fijas] = OrdenFija(id_orden, nombre_servicio, valor_fijo)
+        self.num_fijas += 1
+
+    def adicionar_orden_por_cantidad(self, id_orden, nombre_servicio, cantidad, valor_unitario):
+        self.ordenes_por_cantidad[self.num_cantidades] = OrdenPorCantidad(id_orden, nombre_servicio, cantidad, valor_unitario)
+        self.num_cantidades += 1
+
+    def adicionar_orden_con_descuento(self, id_orden, nombre_servicio, valor_base, porcentaje, subtotal):
+        self.ordenes_con_descuento[self.num_descuentos] = OrdenConDescuento(id_orden, nombre_servicio, valor_base, porcentaje, subtotal)
+        self.num_descuentos += 1
+
+    def calcular_factura_total(self) -> Decimal:
+        total = Decimal(0)
+        for i in range(self.num_fijas):
+            total += self.ordenes_fijas[i].calcular_total()
+        for i in range(self.num_cantidades):
+            total += self.ordenes_por_cantidad[i].calcular_total()
+        for i in range(self.num_descuentos):
+            total += self.ordenes_con_descuento[i].calcular_total()
+        return total
+        
+
+def main():
+    factura = Factura("F001", "Cliente Genérico", "Calle 123")
+
+    num_fijas = int(input("Digite el número de Órdenes Fijas: "))
+    for _ in range(num_fijas):
+        id_orden = input("ID de la Orden: ")
+        nombre = input("Nombre del servicio: ")
+        valor_fijo = Decimal(input("Valor Fijo: "))
+        factura.adicionar_orden_fija(id_orden, nombre, valor_fijo)
+
+    num_cantidades = int(input("Digite el número de Órdenes por Cantidad: "))
+    for _ in range(num_cantidades):
+        id_orden = input("ID de la Orden: ")
+        nombre = input("Nombre del servicio: ")
+        cantidad = Decimal(input("Cantidad: "))
+        valor_unitario = Decimal(input("Valor unitario: "))
+        factura.adicionar_orden_por_cantidad(id_orden, nombre, cantidad, valor_unitario)
+
+    num_descuentos = int(input("Digite el número de Órdenes con Descuento: "))
+    for _ in range(num_descuentos):
+        id_orden = input("ID de la Orden: ")
+        nombre = input("Nombre del servicio: ")
+        valor_base = Decimal(input("Valor base: "))
+        porcentaje = Decimal(input("Porcentaje (%): "))
+        subtotal = Decimal(input("Subtotal: "))
+        factura.adicionar_orden_con_descuento(id_orden, nombre, valor_base, porcentaje, subtotal)
+
+    total = factura.calcular_factura_total()
+    print("El total de la Factura es:", total)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,106 @@
+from abc import ABC, abstractmethod
+from decimal import Decimal
+
+
+class IOrden(ABC):
+    @abstractmethod
+    def calcular_total(self) -> Decimal:
+        pass
+
+
+class OrdenBase(IOrden):
+    def __init__(self, id_orden: str, nombre_servicio: str):
+        self.id_orden = id_orden
+        self.nombre_servicio = nombre_servicio
+
+    @abstractmethod
+    def calcular_total(self) -> Decimal:
+        pass
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(id={self.id_orden}, servicio={self.nombre_servicio})"
+
+
+class OrdenFija(OrdenBase):
+    def __init__(self, id_orden: str, nombre_servicio: str, valor_fijo: Decimal):
+        super().__init__(id_orden, nombre_servicio)
+        self.valor_fijo = Decimal(valor_fijo)
+
+    def calcular_total(self) -> Decimal:
+        return self.valor_fijo
+
+
+class OrdenPorCantidad(OrdenBase):
+    def __init__(self, id_orden: str, nombre_servicio: str, cantidad: Decimal, valor_unitario: Decimal):
+        super().__init__(id_orden, nombre_servicio)
+        self.cantidad = Decimal(cantidad)
+        self.valor_unitario = Decimal(valor_unitario)
+
+    def calcular_total(self) -> Decimal:
+        return self.cantidad * self.valor_unitario
+
+
+class OrdenConDescuento(OrdenBase):
+    def __init__(self, id_orden: str, nombre_servicio: str, valor_base: Decimal, porcentaje: Decimal, subtotal: Decimal):
+        super().__init__(id_orden, nombre_servicio)
+        self.valor_base = Decimal(valor_base)
+        p = Decimal(porcentaje)
+        if p < 0:
+            raise ValueError("El porcentaje no puede ser negativo")
+        self.porcentaje = (p / 100) if p > 1 else p
+        self.subtotal = Decimal(subtotal)
+
+    def calcular_total(self) -> Decimal:
+        return self.valor_base + (self.porcentaje * self.subtotal)
+
+
+class Factura:
+    def __init__(self, numero: str, cliente: str, direccion: str):
+        self.numero = numero
+        self.cliente = cliente
+        self.direccion = direccion
+        self.ordenes: list[IOrden] = []
+
+    def adicionar_orden(self, orden: IOrden):
+        self.ordenes.append(orden)
+
+    def calcular_factura_total(self) -> Decimal:
+        return sum((o.calcular_total() for o in self.ordenes), Decimal(0))
+
+
+def main():
+    factura = Factura("F001", "Cliente Genérico", "Calle 123")
+
+    num_fijas = int(input("Digite el número de Órdenes Fijas: ").strip())
+    for _ in range(num_fijas):
+        id_orden = input("ID Orden: ").strip()
+        servicio = input("Servicio: ").strip()
+        valor_fijo = Decimal(input("Valor fijo: ").strip())
+        orden = OrdenFija(id_orden, servicio, valor_fijo)
+        factura.adicionar_orden(orden)
+
+    num_cantidades = int(input("Digite el número de Órdenes por Cantidad: ").strip())
+    for _ in range(num_cantidades):
+        id_orden = input("ID Orden: ").strip()
+        servicio = input("Servicio: ").strip()
+        cantidad = Decimal(input("Cantidad: ").strip())
+        valor_unitario = Decimal(input("Valor unitario: ").strip())
+        orden = OrdenPorCantidad(id_orden, servicio, cantidad, valor_unitario)
+        factura.adicionar_orden(orden)
+
+    num_descuentos = int(input("Digite el número de Órdenes con Descuento: ").strip())
+    for _ in range(num_descuentos):
+        id_orden = input("ID Orden: ").strip()
+        servicio = input("Servicio: ").strip()
+        valor_base = Decimal(input("Valor base: ").strip())
+        porcentaje = Decimal(input("Porcentaje (ej. 10 o 0.10): ").strip())
+        subtotal = Decimal(input("Subtotal: ").strip())
+        orden = OrdenConDescuento(id_orden, servicio, valor_base, porcentaje, subtotal)
+        factura.adicionar_orden(orden)
+
+    total = factura.calcular_factura_total()
+    print("El valor total de la Factura es:", total)
+
+
+if __name__ == "__main__":
+    main()
